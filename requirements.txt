@@ -1,0 +1,23 @@
+# Core deep learning framework
+tensorflow==2.20.0  # Latest stable version
+
+# Image processing
+Pillow==11.3.0
+opencv-python==4.10.0.84
+
+# Web framework (for deployment)
+Flask==3.0.3
+
+# Scientific computing
+numpy==2.3.3  # Compatible with Python 3.13 and TensorFlow 2.20.0
+scipy==1.16.2  # Has pre-compiled wheels for Python 3.13
+
+# Visualization and analysis
+matplotlib==3.10.6  # Compatible with Python 3.13
+seaborn==0.13.2
+
+# Additional utilities
+scikit-learn==1.7.2  # For metrics and evaluation, compatible with Python 3.13
+
+# Optional: For Windows DirectML acceleration (uncomment if needed)
+# tensorflow-directml

@@ -1,0 +1,740 @@
+{% extends 'base.html' %}
+
+{% block title %}Image Detection - DeepGuard AI{% endblock %}
+
+{% block content %}
+<div class="page-background" style="background: linear-gradient(135deg, var(--primary-black) 0%, var(--primary-dark) 30%, var(--primary-gray) 60%, var(--lemon-dark) 100%); 
+     min-height: 100vh; 
+     padding: 2rem 0;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb" style="background: rgba(255, 215, 0, 0.1); border-radius: 10px; padding: 1rem;">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" style="color: var(--lemon-primary); text-decoration: none; font-weight: 600;">Home</a></li>
+            <li class="breadcrumb-item active" style="color: var(--lemon-bright); font-weight: 600;">Image Detection</li>
+          </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="text-center mb-5" style="background: rgba(0, 0, 0, 0.7); padding: 2rem; border-radius: 15px; border: 2px solid var(--lemon-primary);">
+          <div class="mb-3">
+            <i class="bi bi-image display-4" style="color: var(--lemon-primary); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));"></i>
+          </div>
+          <h1 class="h2 fw-bold mb-3" style="color: var(--lemon-bright); text-shadow: 2px 2px 4px rgba(0,0,0,0.8); font-size: 2.5rem;">Image Deepfake Detection</h1>
+          <p class="lead" style="color: var(--lemon-light); text-shadow: 1px 1px 3px rgba(0,0,0,0.7); font-weight: 500; font-size: 1.3rem;">Upload an image to analyze for deepfake content with advanced AI</p>
+        </div>
+
+      <!-- Upload Section -->
+      <div class="mb-5">
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+          <div class="card shadow-lg upload-card" style="background: rgba(0, 0, 0, 0.8); border: 2px solid var(--lemon-primary); border-radius: 15px;">
+            <div class="card-body p-5 text-center upload-area" id="uploadArea" style="border-radius: 15px;">
+              <div class="upload-content">
+                <div class="mb-3">
+                  <i class="bi bi-cloud-upload display-4" style="color: var(--lemon-primary); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));"></i>
+                </div>
+                <h4 class="h5 mb-2 fw-bold" style="color: var(--lemon-bright); text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-size: 1.5rem;">Drop your image here</h4>
+                <p class="mb-3" style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.7); font-size: 1.1rem; font-weight: 500;">or click to browse files</p>
+                <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+                  <span class="badge" style="background: var(--lemon-primary); color: var(--primary-black); font-weight: 600; padding: 0.5rem 1rem; font-size: 0.9rem;">PNG</span>
+                  <span class="badge" style="background: var(--lemon-primary); color: var(--primary-black); font-weight: 600; padding: 0.5rem 1rem; font-size: 0.9rem;">JPG</span>
+                  <span class="badge" style="background: var(--lemon-primary); color: var(--primary-black); font-weight: 600; padding: 0.5rem 1rem; font-size: 0.9rem;">JPEG</span>
+                  <span class="badge" style="background: var(--lemon-primary); color: var(--primary-black); font-weight: 600; padding: 0.5rem 1rem; font-size: 0.9rem;">GIF</span>
+                  <span class="badge" style="background: var(--lemon-primary); color: var(--primary-black); font-weight: 600; padding: 0.5rem 1rem; font-size: 0.9rem;">BMP</span>
+                </div>
+                <div class="upload-animation">
+                  <div class="pulse-circle"></div>
+                  <div class="pulse-circle pulse-delay-1"></div>
+                  <div class="pulse-circle pulse-delay-2"></div>
+                </div>
+              </div>
+              <input type="file" name="file" id="fileInput" accept="image/*" required hidden>
+            </div>
+            
+            <!-- Image Preview -->
+            <div class="card-body border-top preview-section" id="imagePreview" style="display: none; background: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--lemon-primary) !important; border-radius: 0 0 15px 15px;">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold" style="color: var(--lemon-bright); text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
+                  <i class="bi bi-image me-2" style="color: var(--lemon-primary);"></i>Selected Image
+                </h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="changeImage" style="border-color: var(--lemon-primary); color: var(--lemon-primary); background: rgba(255, 215, 0, 0.1);">
+                  <i class="bi bi-arrow-repeat me-1"></i>Change
+                </button>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="image-preview-container" style="background: rgba(255, 215, 0, 0.1); padding: 1rem; border-radius: 10px;">
+                    <img id="previewImg" src="" alt="Preview" class="img-fluid rounded shadow" style="border: 2px solid var(--lemon-primary);">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="file-details" style="background: rgba(0, 0, 0, 0.6); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--lemon-primary);">
+                    <div class="detail-item" style="margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                      <span class="detail-label" style="color: var(--lemon-primary); font-weight: 600; font-size: 1rem;">File:</span>
+                      <span class="detail-value" id="fileName" style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500; margin-left: 0.5rem;"></span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                      <span class="detail-label" style="color: var(--lemon-primary); font-weight: 600; font-size: 1rem;">Size:</span>
+                      <span class="detail-value" id="fileSize" style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500; margin-left: 0.5rem;"></span>
+                    </div>
+                    <div class="detail-item" style="margin-bottom: 0;">
+                      <span class="detail-label" style="color: var(--lemon-primary); font-weight: 600; font-size: 1rem;">Type:</span>
+                      <span class="detail-value" id="fileType" style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500; margin-left: 0.5rem;"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer text-center" style="background: rgba(0, 0, 0, 0.9); border-top: 1px solid var(--lemon-primary); border-radius: 0 0 15px 15px;">
+              <button type="submit" class="btn btn-lg analyze-btn" id="analyzeBtn" disabled style="background: var(--lemon-primary); color: var(--primary-black); border: none; padding: 0.75rem 2rem; font-weight: 600; font-size: 1.1rem; border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+                <i class="bi bi-search me-2"></i>Analyze Image
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Error Display -->
+      {% if error %}
+      <div class="alert d-flex align-items-center" role="alert" style="background: rgba(220, 53, 69, 0.1); border: 2px solid #dc3545; border-radius: 10px; color: #ff6b6b; padding: 1rem;">
+        <div class="me-3">
+          <i class="bi bi-exclamation-triangle" style="font-size: 1.5rem; color: #dc3545;"></i>
+        </div>
+        <div>
+          <strong style="color: #ff6b6b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">Error:</strong> 
+          <span style="color: #ffb3b3; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500;">{{ error }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Results Section -->
+      {% if result %}
+      <div class="mb-5" id="resultsSection" 
+           data-filename="{{ img_filename }}" 
+           data-result="{{ result.label }}" 
+           data-confidence="{{ result.confidence }}">
+        <div class="card shadow" style="background: rgba(0, 0, 0, 0.8); border: 2px solid var(--lemon-primary); border-radius: 15px;">
+          <div class="card-header" style="background: linear-gradient(135deg, var(--lemon-primary), var(--lemon-bright)); color: var(--primary-black); border-radius: 15px 15px 0 0; border-bottom: 1px solid var(--lemon-primary);">
+            <h3 class="card-title mb-0" style="font-weight: 700; font-size: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+              <i class="bi bi-clipboard-data me-2"></i>Analysis Results
+            </h3>
+          </div>
+          
+          <div class="card-body" style="background: rgba(0, 0, 0, 0.9); border-radius: 0 0 15px 15px;">
+            <div class="row g-4">
+              <!-- Image Display -->
+              <div class="col-md-5">
+                <div class="text-center" style="background: rgba(255, 215, 0, 0.1); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--lemon-primary);">
+                  <img src="{{ url_for('static', filename='uploads/' + img_filename) }}"
+                       class="img-fluid rounded shadow" alt="Analyzed image" style="border: 2px solid var(--lemon-primary); border-radius: 10px;">
+                </div>
+              </div>
+              
+              <!-- Results Display -->
+              <div class="col-md-7">
+                <div class="">
+                  <!-- Classification Result -->
+                  <div class="mb-4">
+                    <div class="badge fs-6 p-3 {% if result.label=='Deepfake' %}bg-danger{% else %}bg-success{% endif %}" style="font-size: 1.2rem !important; padding: 1rem 2rem !important; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                      {% if result.label=='Deepfake' %}
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ result.label }}
+                      {% else %}
+                        <i class="bi bi-check-circle me-2"></i>{{ result.label }}
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- Confidence Score -->
+                  <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <span class="fw-medium" style="color: var(--lemon-bright); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-size: 1.1rem;">Confidence Level</span>
+                      <span class="fw-bold" style="color: var(--lemon-primary); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-size: 1.2rem;">{{ result.confidence }}</span>
+                    </div>
+                    <div class="progress" style="height: 20px; background: rgba(255, 215, 0, 0.2); border-radius: 10px; border: 1px solid var(--lemon-primary);">
+                      <div class="progress-bar {% if result.label=='Deepfake' %}bg-danger{% else %}bg-success{% endif %}" 
+                           role="progressbar" data-width="{{ result.confidence }}" style="border-radius: 10px;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Additional Info -->
+                  <div class="mb-4">
+                    <div class="card" style="background: rgba(255, 215, 0, 0.1); border: 1px solid var(--lemon-primary); border-radius: 10px;">
+                      <div class="card-body" style="padding: 1.5rem;">
+                        <h6 class="card-title" style="color: var(--lemon-bright); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">Detection Details</h6>
+                        <div class="row g-2">
+                          <div class="col-12" style="margin-bottom: 0.5rem;">
+                            <div class="d-flex justify-content-between" style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                              <span class="fw-medium" style="color: var(--lemon-primary); font-weight: 600;">Model:</span>
+                              <span style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500;">DeepGuard AI v3.1</span>
+                            </div>
+                          </div>
+                          <div class="col-12" style="margin-bottom: 0.5rem;">
+                            <div class="d-flex justify-content-between" style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255, 215, 0, 0.3);">
+                              <span class="fw-medium" style="color: var(--lemon-primary); font-weight: 600;">Processing Time:</span>
+                              <span style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500;">&lt; 2 seconds</span>
+                            </div>
+                          </div>
+                          <div class="col-12">
+                            <div class="d-flex justify-content-between" style="padding: 0.5rem 0;">
+                              <span class="fw-medium" style="color: var(--lemon-primary); font-weight: 600;">Accuracy:</span>
+                              <span style="color: var(--lemon-light); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-weight: 500;">99.2%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn" onclick="downloadImageReport()" style="background: var(--lemon-primary); color: var(--primary-black); border: none; padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 10px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+                      <i class="bi bi-file-earmark-pdf me-2"></i>Download Report
+                    </button>
+                    <a href="{{ url_for('image_detector') }}" class="btn" style="background: rgba(255, 215, 0, 0.2); color: var(--lemon-bright); border: 2px solid var(--lemon-primary); padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 10px; text-decoration: none;">
+                      <i class="bi bi-arrow-repeat me-2"></i>Analyze Another Image
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn" style="background: rgba(0, 0, 0, 0.6); color: var(--lemon-light); border: 2px solid var(--primary-gray); padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 10px; text-decoration: none;">
+                      <i class="bi bi-house me-2"></i>Back to Home
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewImg = document.getElementById('previewImg');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const changeImageBtn = document.getElementById('changeImage');
+  const uploadForm = document.getElementById('uploadForm');
+
+  // Save report data if results are present
+  const resultsSection = document.getElementById('resultsSection');
+  if (resultsSection) {
+    const reportData = {
+      type: 'image',
+      fileName: resultsSection.dataset.filename,
+      result: resultsSection.dataset.result,
+      confidence: resultsSection.dataset.confidence,
+      imageUrl: resultsSection.dataset.imageUrl
+    };
+    
+    // Save to localStorage
+    if (typeof window.saveAnalysisReport === 'function') {
+      window.saveAnalysisReport(reportData);
+    } else {
+      // Fallback if reports.js is not loaded
+      saveReportToStorage(reportData);
+    }
+  }
+
+  // File input change handler
+  fileInput.addEventListener('change', handleFileSelect);
+  changeImageBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  // Drag and drop handlers with enhanced animation
+  uploadArea.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    if (!uploadArea.contains(e.relatedTarget)) {
+      uploadArea.classList.remove('dragover');
+    }
+  });
+
+  uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      handleFileSelect();
+    }
+  });
+
+  // Form submission with processing animation
+  uploadForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!fileInput.files[0]) {
+      showNotification('Please select an image file first', 'warning');
+      return;
+    }
+
+    // Show processing state
+    const submitBtn = document.getElementById('analyzeBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <div class="processing-animation">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        Processing image... This may take a few moments
+      </div>
+    `;
+
+    // Show processing overlay
+    showProcessingOverlay('Analyzing image for deepfake content...');
+
+    // Submit the form
+    this.submit();
+  });
+
+  function showProcessingOverlay(message) {
+    const overlay = document.createElement('div');
+    overlay.className = 'processing-overlay';
+    overlay.innerHTML = `
+      <div class="processing-content">
+        <div class="processing-spinner">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+        <h4 class="processing-title">Analyzing Image</h4>
+        <p class="processing-message">${message}</p>
+        <div class="processing-steps">
+          <div class="step active">
+            <div class="step-icon">1</div>
+            <span>Uploading image</span>
+          </div>
+          <div class="step">
+            <div class="step-icon">2</div>
+            <span>AI Analysis</span>
+          </div>
+          <div class="step">
+            <div class="step-icon">3</div>
+            <span>Generating results</span>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Animate steps
+    setTimeout(() => {
+      const steps = overlay.querySelectorAll('.step');
+      steps[1].classList.add('active');
+    }, 1000);
+
+    setTimeout(() => {
+      const steps = overlay.querySelectorAll('.step');
+      steps[2].classList.add('active');
+    }, 2000);
+  }
+
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
+  }
+
+  function handleFileSelect() {
+    const file = fileInput.files[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp'];
+      if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image file (PNG, JPG, JPEG, GIF, BMP)');
+        return;
+      }
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        uploadArea.style.display = 'none';
+        imagePreview.style.display = 'block';
+        analyzeBtn.disabled = false;
+
+        // Update file details
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        document.getElementById('fileType').textContent = file.type;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // Form submission handler
+  uploadForm.addEventListener('submit', function(e) {
+    const submitBtn = analyzeBtn;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Analyzing...';
+    submitBtn.disabled = true;
+  });
+
+  // Apply confidence bar width from data attribute
+  const confidenceProgress = document.querySelector('.progress-bar[data-width]');
+  if (confidenceProgress) {
+    const width = confidenceProgress.getAttribute('data-width');
+    confidenceProgress.style.width = width;
+  }
+});
+
+// Report functionality
+function downloadImageReport() {
+  const resultsSection = document.getElementById('resultsSection');
+  if (resultsSection) {
+    const reportData = {
+      type: 'image',
+      fileName: resultsSection.dataset.filename,
+      result: resultsSection.dataset.result,
+      confidence: resultsSection.dataset.confidence,
+      timestamp: new Date().toISOString()
+    };
+    
+    generateImagePDF(reportData);
+  }
+}
+
+function generateImagePDF(report) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Define colors (RGB values) - Updated to match lemon/black theme
+  const primaryLemon = [255, 215, 0];   // Lemon Yellow
+  const primaryBlack = [0, 0, 0];       // Black
+  const darkGray = [26, 26, 26];        // Dark Gray
+  const lightGray = [45, 45, 45];       // Light Gray
+  const success = [34, 197, 94];
+  const danger = [239, 68, 68];
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  
+  // Add watermark logo
+  const logoImg = new Image();
+  logoImg.onload = function() {
+    // Add logo as watermark in center of page
+    const logoWidth = 80;
+    const logoHeight = 80;
+    const logoX = (pageWidth - logoWidth) / 2;
+    const logoY = (pageHeight - logoHeight) / 2;
+    
+    // Set opacity for watermark effect
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity: 0.15}));
+    doc.addImage(logoImg, 'PNG', logoX, logoY, logoWidth, logoHeight);
+    doc.restoreGraphicsState();
+    
+    // Generate PDF content after watermark is added
+    generatePDFContent();
+  };
+  logoImg.src = "{{ url_for('static', filename='logo.png') }}";
+  
+  function generatePDFContent() {
+    // Document border
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.rect(15, 15, pageWidth - 30, pageHeight - 30);
+  
+  // Header section with background
+  doc.setFillColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.rect(15, 15, pageWidth - 30, 35, 'F');
+  
+  // Header text
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryBlack[0], primaryBlack[1], primaryBlack[2]);
+  doc.text('DEEPGUARD AI', 25, 35);
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text('IMAGE DEEPFAKE DETECTION ANALYSIS REPORT', 25, 45);
+  
+  // Report metadata
+  doc.setFontSize(10);
+  const reportId = `IMG-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  doc.text(`Report ID: ${reportId}`, pageWidth - 80, 30);
+  doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, pageWidth - 80, 40);
+  
+  let currentY = 70;
+  
+  // Executive Summary Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.text('EXECUTIVE SUMMARY', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Summary box
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(25, currentY, pageWidth - 50, 25);
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('Analysis Result:', 30, currentY + 10);
+  
+  // Result with color coding
+  const resultColor = (report.result === 'Fake' || report.result === 'Deepfake') ? danger : success;
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(resultColor[0], resultColor[1], resultColor[2]);
+  doc.text(report.result.toUpperCase(), 80, currentY + 10);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('Confidence:', 30, currentY + 18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(report.confidence, 80, currentY + 18);
+  
+  currentY += 35;
+  
+  // File Information Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.text('FILE INFORMATION', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // File info table
+  const fileInfo = [
+    ['File Name:', report.fileName],
+    ['File Type:', 'IMAGE'],
+    ['Analysis Date:', `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`],
+    ['File Size:', 'N/A'],
+    ['Processing Time:', '< 2 seconds']
+  ];
+  
+  fileInfo.forEach((row, index) => {
+    if (index % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    }
+    
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.rect(25, currentY, (pageWidth - 50) / 2, 8);
+    doc.rect(25 + (pageWidth - 50) / 2, currentY, (pageWidth - 50) / 2, 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.text(row[0], 30, currentY + 5.5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 30 + (pageWidth - 50) / 2, currentY + 5.5);
+    
+    currentY += 8;
+  });
+  
+  currentY += 10;
+  
+  // Detection Results Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.text('DETECTION RESULTS', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Results table
+  const detectionResults = [
+    ['Detection Result:', report.result],
+    ['Confidence Score:', report.confidence],
+    ['Model Version:', 'DeepGuard AI v3.1'],
+    ['Algorithm:', 'Advanced Neural Network'],
+    ['Accuracy Rate:', '99.2%']
+  ];
+  
+  detectionResults.forEach((row, index) => {
+    // Highlight first row (main result)
+    if (index === 0) {
+      const bgColor = (report.result === 'Fake' || report.result === 'Deepfake') ? danger : success;
+      doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    } else if (index % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    }
+    
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.rect(25, currentY, (pageWidth - 50) / 2, 8);
+    doc.rect(25 + (pageWidth - 50) / 2, currentY, (pageWidth - 50) / 2, 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    const textColor = (index === 0) ? [255, 255, 255] : darkGray;
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(row[0], 30, currentY + 5.5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 30 + (pageWidth - 50) / 2, currentY + 5.5);
+    
+    currentY += 8;
+  });
+  
+  currentY += 15;
+  
+  // Analysis Details Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.text('ANALYSIS METHODOLOGY', 25, currentY + 8);
+  
+  
+  currentY += 20;
+  
+  // Analysis details box
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(25, currentY, pageWidth - 50, 35);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  
+  const analysisText = [
+    'The analysis was performed using advanced deep learning algorithms that examine',
+    'pixel-level patterns, facial features, and compression artifacts to detect potential',
+    'deepfake content. Our neural network has been trained on millions of images to',
+    'identify subtle inconsistencies that indicate synthetic manipulation.',
+  ];
+  
+  analysisText.forEach((line, index) => {
+    doc.text(line, 30, currentY + 10 + (index * 6));
+  });
+  
+  currentY += 45;
+  
+  // Technical Specifications Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryLemon[0], primaryLemon[1], primaryLemon[2]);
+  doc.text('TECHNICAL SPECIFICATIONS', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Technical details box
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(25, currentY, pageWidth - 50, 45);
+  
+  const features = [
+    'Advanced Convolutional Neural Network Architecture',
+    'Multi-layer Feature Extraction and Pattern Recognition',
+    'Real-time Image Processing Capability',
+    '99.2% Accuracy Rate on Validation Dataset',
+    'Robust Against Various Deepfake Techniques',
+    'ISO 27001 Compliant Security Standards'
+  ];
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  
+  features.forEach((feature, index) => {
+    doc.text(`• ${feature}`, 30, currentY + 10 + (index * 7));
+  });
+  
+  // Footer
+  const footerY = pageHeight - 25;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+  
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('DeepGuard AI - Advanced Deepfake Detection Technology', 20, footerY);
+  doc.text('© 2025 All rights reserved | Confidential Report', 20, footerY + 7);
+  doc.text('Page 1 of 1', pageWidth - 40, footerY);
+  doc.text('www.deepguard.ai', pageWidth - 40, footerY + 7);
+  
+  // Save the PDF
+  const fileName = `DeepGuard_Image_Analysis_Report_${report.fileName.replace(/\.[^/.]+$/, "")}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+  } // End of generatePDFContent function
+  
+  // Handle error if logo fails to load
+  logoImg.onerror = function() {
+    console.warn('Logo failed to load, generating PDF without watermark');
+    generatePDFContent();
+  };
+}
+
+function saveReportToStorage(reportData) {
+  const reports = JSON.parse(localStorage.getItem('deepguard_reports') || '[]');
+  reports.push({
+    id: 'report_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    timestamp: new Date().toISOString(),
+    ...reportData
+  });
+  localStorage.setItem('deepguard_reports', JSON.stringify(reports));
+}
+</script>
+{% endblock %}

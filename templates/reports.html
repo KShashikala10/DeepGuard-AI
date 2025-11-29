@@ -1,0 +1,787 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Reports - DeepGuard AI{% endblock %}
+
+{% block content %}
+<div class="page-background" style="background: linear-gradient(135deg, var(--primary-black) 0%, var(--primary-dark) 30%, var(--primary-gray) 60%, var(--lemon-dark) 100%); 
+     min-height: 100vh; 
+     padding: 2rem 0;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+          <ol class="breadcrumb" style="background: rgba(255, 215, 0, 0.1); border-radius: 10px; padding: 1rem;">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" style="color: var(--lemon-primary); text-decoration: none; font-weight: 600;">Home</a></li>
+            <li class="breadcrumb-item active" style="color: var(--lemon-bright); font-weight: 600;">Analysis Reports</li>
+          </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="text-center mb-5" style="background: rgba(0, 0, 0, 0.7); padding: 2rem; border-radius: 15px; border: 2px solid var(--lemon-primary);">
+          <div class="mb-3">
+            <i class="bi bi-file-earmark-text display-4" style="color: var(--lemon-primary); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));"></i>
+        </div>
+        <h1 class="h2 fw-bold mb-3 gradient-text">Analysis Reports</h1>
+        <p class="lead text-muted">View and manage your deepfake detection analysis reports</p>
+      </div>
+
+      <!-- Reports Controls -->
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="clearAllReports()">
+              <i class="bi bi-trash me-2"></i>Clear All Reports
+            </button>
+            <button class="btn btn-outline-primary" onclick="exportAllReports()">
+              <i class="bi bi-download me-2"></i>Export All
+            </button>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="d-flex justify-content-md-end">
+            <div class="input-group" style="max-width: 300px;">
+              <input type="text" class="form-control" placeholder="Search reports..." id="searchReports">
+              <button class="btn btn-outline-primary" type="button">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports List -->
+      <div id="reportsList">
+        <!-- Reports will be dynamically loaded here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center py-5" style="display: none;">
+        <div class="mb-4">
+          <i class="bi bi-file-earmark-text display-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted mb-3">No Reports Found</h4>
+        <p class="text-muted mb-4">You haven't generated any analysis reports yet.</p>
+        <div class="d-flex gap-2 justify-content-center">
+          <a href="{{ url_for('image_detector') }}" class="btn btn-primary">
+            <i class="bi bi-image me-2"></i>Analyze Image
+          </a>
+          <a href="{{ url_for('video_detector') }}" class="btn btn-secondary">
+            <i class="bi bi-camera-video me-2"></i>Analyze Video
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Report Detail Modal -->
+<div id="customReportModal" class="custom-modal" style="display: none;">
+  <div class="custom-modal-overlay">
+    <div class="custom-modal-container">
+      <div class="custom-modal-header">
+        <h5 class="custom-modal-title">
+          <i class="bi bi-file-earmark-text me-2"></i>Analysis Report Details
+        </h5>
+        <button type="button" class="custom-modal-close" onclick="closeCustomModal()">&times;</button>
+      </div>
+      <div class="custom-modal-body" id="customReportModalBody">
+        <!-- Report details will be loaded here -->
+      </div>
+      <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeCustomModal()">Close</button>
+        <button type="button" class="btn btn-primary" onclick="downloadCurrentReport()">
+          <i class="bi bi-download me-1"></i>Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Modal Styles -->
+<style>
+.custom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1050;
+  overflow: auto;
+}
+
+.custom-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.custom-modal-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  position: relative;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.custom-modal-header {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.custom-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.custom-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.custom-modal-body {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.custom-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  background-color: #f8f9fa;
+}
+
+/* Prevent scrolling on body when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .custom-modal-container {
+    margin: 10px;
+    max-height: 95vh;
+  }
+  
+  .custom-modal-body {
+    max-height: 70vh;
+  }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadReports();
+  setupSearch();
+  
+  // Handle escape key to close modal
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeCustomModal();
+    }
+  });
+  
+  // Handle clicking outside modal to close it
+  document.addEventListener('click', function(event) {
+    const modal = document.getElementById('customReportModal');
+    const modalOverlay = document.querySelector('.custom-modal-overlay');
+    
+    if (modal.style.display === 'block' && event.target === modalOverlay) {
+      closeCustomModal();
+    }
+  });
+});
+
+let currentReport = null;
+
+// Custom Modal Functions
+function showCustomModal(reportId) {
+  const reports = getStoredReports();
+  const report = reports.find(r => r.id === reportId);
+  
+  if (!report) {
+    alert('Report not found');
+    return;
+  }
+
+  currentReport = report;
+  
+  const modalBody = document.getElementById('customReportModalBody');
+  modalBody.innerHTML = generateReportHTML(report);
+  
+  const modal = document.getElementById('customReportModal');
+  modal.style.display = 'block';
+  document.body.classList.add('modal-open');
+  
+  // Prevent clicks inside modal container from closing the modal
+  const modalContainer = document.querySelector('.custom-modal-container');
+  modalContainer.addEventListener('click', function(event) {
+    event.stopPropagation();
+  });
+  
+  // Focus trap for accessibility
+  modal.focus();
+}
+
+function closeCustomModal() {
+  const modal = document.getElementById('customReportModal');
+  modal.style.display = 'none';
+  document.body.classList.remove('modal-open');
+  currentReport = null;
+}
+
+function loadReports() {
+  const reports = getStoredReports();
+  const reportsList = document.getElementById('reportsList');
+  const emptyState = document.getElementById('emptyState');
+
+  if (reports.length === 0) {
+    reportsList.style.display = 'none';
+    emptyState.style.display = 'block';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  reportsList.style.display = 'block';
+
+  // Sort reports by date (newest first)
+  reports.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  reportsList.innerHTML = reports.map(report => `
+    <div class="card mb-3 shadow-sm report-card" data-report-id="${report.id}">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-2 text-center">
+            <div class="mb-2">
+              <i class="bi bi-${report.type === 'image' ? 'image' : 'camera-video'}" style="font-size: 2rem; color: var(--${report.type === 'image' ? 'light-blue' : 'secondary-teal'});"></i>
+            </div>
+            <span class="badge ${report.result === 'Fake' || report.result === 'Deepfake' ? 'bg-danger' : ''}" ${report.result !== 'Fake' && report.result !== 'Deepfake' ? 'style="background-color: var(--secondary-teal); color: white;"' : ''}>
+              ${report.result}
+            </span>
+          </div>
+          <div class="col-md-6">
+            <h6 class="card-title mb-1">${report.fileName}</h6>
+            <p class="text-muted mb-1">
+              <i class="bi bi-calendar me-1"></i>${formatDate(report.timestamp)}
+            </p>
+            <p class="text-muted mb-0">
+              <i class="bi bi-speedometer me-1"></i>Confidence: ${report.confidence}
+            </p>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <div class="d-flex gap-2 justify-content-md-end">
+              <button class="btn btn-outline-secondary btn-sm" onclick="showCustomModal('${report.id}')">
+                <i class="bi bi-eye me-1"></i>View
+              </button>
+              <button class="btn btn-outline-primary btn-sm" onclick="downloadReport('${report.id}')">
+                <i class="bi bi-download me-1"></i>PDF
+              </button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${report.id}')">
+                <i class="bi bi-trash me-1"></i>Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getStoredReports() {
+  const reports = localStorage.getItem('deepguard_reports');
+  return reports ? JSON.parse(reports) : [];
+}
+
+function saveReport(reportData) {
+  const reports = getStoredReports();
+  reports.push({
+    id: generateReportId(),
+    timestamp: new Date().toISOString(),
+    ...reportData
+  });
+  localStorage.setItem('deepguard_reports', JSON.stringify(reports));
+}
+
+function generateReportId() {
+  return 'report_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+function prepareReportModal(reportId) {
+  // This function is now replaced by showCustomModal
+  showCustomModal(reportId);
+}
+
+function generateReportHTML(report) {
+  return `
+    <div class="report-content">
+      <div class="text-center mb-4">
+        <h4>DeepGuard AI Analysis Report</h4>
+        <p class="text-muted">Generated on ${formatDate(report.timestamp)}</p>
+      </div>
+      
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h6>File Information</h6>
+          <table class="table table-sm">
+            <tr><td><strong>File Name:</strong></td><td>${report.fileName}</td></tr>
+            <tr><td><strong>File Type:</strong></td><td>${report.type.toUpperCase()}</td></tr>
+            <tr><td><strong>Analysis Date:</strong></td><td>${formatDate(report.timestamp)}</td></tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <h6>Detection Results</h6>
+          <table class="table table-sm">
+            <tr><td><strong>Result:</strong></td><td><span class="badge ${report.result === 'Fake' || report.result === 'Deepfake' ? 'bg-danger' : ''}" ${report.result !== 'Fake' && report.result !== 'Deepfake' ? 'style="background-color: var(--secondary-teal); color: white;"' : ''}>${report.result}</span></td></tr>
+            <tr><td><strong>Confidence:</strong></td><td>${report.confidence}</td></tr>
+            <tr><td><strong>Model:</strong></td><td>DeepGuard AI v3.1</td></tr>
+          </table>
+        </div>
+      </div>
+      
+      ${report.type === 'video' ? `
+        <div class="mb-4">
+          <h6>Frame Analysis</h6>
+          <div class="row">
+            <div class="col-6">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 class="text-danger">${report.fakeVotes || 0}</h5>
+                  <small class="text-muted">Fake Detections</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="card text-center">
+                <div class="card-body">
+                  <h5 style="color: var(--secondary-teal);">${report.realVotes || 0}</h5>
+                  <small class="text-muted">Real Detections</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      
+      <div class="mb-4">
+        <h6>Technical Details</h6>
+        <ul class="list-unstyled">
+          <li><i class="bi bi-check-circle text-success me-2"></i>Advanced neural network analysis</li>
+          <li><i class="bi bi-check-circle text-success me-2"></i>Multi-layer feature extraction</li>
+          <li><i class="bi bi-check-circle text-success me-2"></i>Pattern recognition algorithms</li>
+          <li><i class="bi bi-check-circle text-success me-2"></i>99.2% accuracy rate</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function downloadReport(reportId) {
+  const reports = getStoredReports();
+  const report = reports.find(r => r.id === reportId);
+  
+  if (!report) return;
+  
+  generatePDF(report);
+}
+
+function downloadCurrentReport() {
+  if (currentReport) {
+    generatePDF(currentReport);
+  }
+}
+
+function generatePDF(report) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Define colors (RGB values)
+  const primaryBlue = [30, 58, 138];
+  const secondaryTeal = [8, 145, 178];
+  const darkGray = [71, 85, 105];
+  const lightGray = [248, 250, 252];
+  const success = [34, 197, 94];
+  const danger = [239, 68, 68];
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  
+  // Document border
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(15, 15, pageWidth - 30, pageHeight - 30);
+  
+  // Header section with background
+  doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.rect(15, 15, pageWidth - 30, 35, 'F');
+  
+  // Header text
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('DEEPGUARD AI', 25, 35);
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text('DEEPFAKE DETECTION ANALYSIS REPORT', 25, 45);
+  
+  // Report metadata
+  doc.setFontSize(10);
+  const reportId = `RPT-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  doc.text(`Report ID: ${reportId}`, pageWidth - 80, 30);
+  doc.text(`Generated: ${formatDate(report.timestamp)}`, pageWidth - 80, 40);
+  
+  let currentY = 70;
+  
+  // Executive Summary Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.text('EXECUTIVE SUMMARY', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Summary box
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(25, currentY, pageWidth - 50, 25);
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('Analysis Result:', 30, currentY + 10);
+  
+  // Result with color coding
+  const resultColor = (report.result === 'Fake' || report.result === 'Deepfake') ? danger : success;
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(resultColor[0], resultColor[1], resultColor[2]);
+  doc.text(report.result.toUpperCase(), 80, currentY + 10);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('Confidence:', 30, currentY + 18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(report.confidence, 80, currentY + 18);
+  
+  currentY += 35;
+  
+  // File Information Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+  doc.text('FILE INFORMATION', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // File info table
+  const fileInfo = [
+    ['File Name:', report.fileName],
+    ['File Type:', report.type.toUpperCase()],
+    ['Analysis Date:', formatDate(report.timestamp)],
+    ['File Size:', 'N/A'],
+    ['Processing Time:', '< 1 minute']
+  ];
+  
+  fileInfo.forEach((row, index) => {
+    if (index % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    }
+    
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.rect(25, currentY, (pageWidth - 50) / 2, 8);
+    doc.rect(25 + (pageWidth - 50) / 2, currentY, (pageWidth - 50) / 2, 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+    doc.text(row[0], 30, currentY + 5.5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 30 + (pageWidth - 50) / 2, currentY + 5.5);
+    
+    currentY += 8;
+  });
+  
+  currentY += 10;
+  
+  // Detection Results Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.text('DETECTION RESULTS', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Results table
+  const detectionResults = [
+    ['Detection Result:', report.result],
+    ['Confidence Score:', report.confidence],
+    ['Model Version:', 'DeepGuard AI v3.1'],
+    ['Algorithm:', 'Advanced Neural Network'],
+    ['Status:', 'Completed Successfully']
+  ];
+  
+  detectionResults.forEach((row, index) => {
+    // Highlight first row (main result)
+    if (index === 0) {
+      const bgColor = (report.result === 'Fake' || report.result === 'Deepfake') ? danger : success;
+      doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    } else if (index % 2 === 0) {
+      doc.setFillColor(250, 250, 250);
+      doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+    }
+    
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.2);
+    doc.rect(25, currentY, (pageWidth - 50) / 2, 8);
+    doc.rect(25 + (pageWidth - 50) / 2, currentY, (pageWidth - 50) / 2, 8);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    const textColor = (index === 0) ? [255, 255, 255] : darkGray;
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(row[0], 30, currentY + 5.5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(row[1], 30 + (pageWidth - 50) / 2, currentY + 5.5);
+    
+    currentY += 8;
+  });
+  
+  currentY += 10;
+  
+  // Video Analysis (if applicable)
+  if (report.type === 'video') {
+    doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+    doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+    doc.setDrawColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+    doc.setLineWidth(2);
+    doc.line(20, currentY, pageWidth - 20, currentY);
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(secondaryTeal[0], secondaryTeal[1], secondaryTeal[2]);
+    doc.text('VIDEO FRAME ANALYSIS', 25, currentY + 8);
+    
+    currentY += 20;
+    
+    const fakeVotes = report.fakeVotes || 0;
+    const realVotes = report.realVotes || 0;
+    const totalFrames = fakeVotes + realVotes;
+    
+    const videoAnalysis = [
+      ['Total Frames:', totalFrames.toString()],
+      ['Fake Detections:', fakeVotes.toString()],
+      ['Real Detections:', realVotes.toString()],
+      ['Fake Percentage:', totalFrames > 0 ? `${((fakeVotes / totalFrames) * 100).toFixed(1)}%` : '0%'],
+      ['Real Percentage:', totalFrames > 0 ? `${((realVotes / totalFrames) * 100).toFixed(1)}%` : '0%']
+    ];
+    
+    videoAnalysis.forEach((row, index) => {
+      if (index % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(25, currentY, pageWidth - 50, 8, 'F');
+      }
+      
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.2);
+      doc.rect(25, currentY, (pageWidth - 50) / 2, 8);
+      doc.rect(25 + (pageWidth - 50) / 2, currentY, (pageWidth - 50) / 2, 8);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+      doc.text(row[0], 30, currentY + 5.5);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.text(row[1], 30 + (pageWidth - 50) / 2, currentY + 5.5);
+      
+      currentY += 8;
+    });
+    
+    currentY += 10;
+  }
+  
+  // Technical Details Section
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, currentY, pageWidth - 40, 12, 'F');
+  doc.setDrawColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.setLineWidth(2);
+  doc.line(20, currentY, pageWidth - 20, currentY);
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
+  doc.text('TECHNICAL SPECIFICATIONS', 25, currentY + 8);
+  
+  currentY += 20;
+  
+  // Technical details box
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.rect(25, currentY, pageWidth - 50, 45);
+  
+  const features = [
+    'Advanced Convolutional Neural Network Architecture',
+    'Multi-layer Feature Extraction and Pattern Recognition',
+    'Real-time Deep Learning Model Processing',
+    '99.2% Accuracy Rate on Validation Dataset',
+    'Robust Against Various Deepfake Techniques',
+    'ISO 27001 Compliant Security Standards'
+  ];
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  
+  features.forEach((feature, index) => {
+    doc.text(`• ${feature}`, 30, currentY + 10 + (index * 7));
+  });
+  
+  // Footer
+  const footerY = pageHeight - 25;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.5);
+  doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+  
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
+  doc.text('DeepGuard AI - Advanced Deepfake Detection Technology', 20, footerY);
+  doc.text('© 2025 All rights reserved | Confidential Report', 20, footerY + 7);
+  doc.text('Page 1 of 1', pageWidth - 40, footerY);
+  doc.text('www.deepguard.ai', pageWidth - 40, footerY + 7);
+  
+  // Save the PDF
+  const fileName = `DeepGuard_Analysis_Report_${report.fileName.replace(/\.[^/.]+$/, "")}_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(fileName);
+}
+
+function deleteReport(reportId) {
+  if (confirm('Are you sure you want to delete this report?')) {
+    let reports = getStoredReports();
+    reports = reports.filter(r => r.id !== reportId);
+    localStorage.setItem('deepguard_reports', JSON.stringify(reports));
+    loadReports();
+  }
+}
+
+function clearAllReports() {
+  if (confirm('Are you sure you want to delete all reports? This action cannot be undone.')) {
+    localStorage.removeItem('deepguard_reports');
+    loadReports();
+  }
+}
+
+function exportAllReports() {
+  const reports = getStoredReports();
+  if (reports.length === 0) {
+    alert('No reports to export.');
+    return;
+  }
+  
+  const dataStr = JSON.stringify(reports, null, 2);
+  const dataBlob = new Blob([dataStr], {type: 'application/json'});
+  
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(dataBlob);
+  link.download = `DeepGuard_Reports_${new Date().toISOString().split('T')[0]}.json`;
+  link.click();
+}
+
+function setupSearch() {
+  const searchInput = document.getElementById('searchReports');
+  searchInput.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const reportCards = document.querySelectorAll('.report-card');
+    
+    reportCards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(searchTerm)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+}
+
+// Global function to save reports from other pages
+window.saveAnalysisReport = function(reportData) {
+  saveReport(reportData);
+};
+</script>
+{% endblock %}

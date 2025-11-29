@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Deepfake Detection Suite{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <meta name="theme-color" content="#ffd700">
+  </head>
+  <body class="d-flex" style="margin: 0; padding: 0; border-radius: 0 !important; overflow-x: hidden;">
+    <!-- Left Sidebar Navigation -->
+    <nav class="sidebar d-flex flex-column flex-shrink-0 p-3" id="sidebar" 
+         style="background: linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #334155 70%, #475569 100%); 
+                box-shadow: 4px 0 15px rgba(15, 23, 42, 0.5);
+                border-right: 2px solid #334155;">
+      <div class="sidebar-header">
+        <a class="navbar-brand fw-bold d-flex align-items-center mb-3" href="{{ url_for('index') }}" 
+           style="color: var(--lemon-bright); text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-decoration: none;">
+          <div class="me-2" style="color: var(--lemon-primary); filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <span>DeepGuard AI</span>
+        </a>
+      </div>
+      
+      <hr class="sidebar-divider" style="border-color: rgba(255, 215, 0, 0.3); border-width: 2px;">
+      
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}"
+             {% if request.endpoint == 'index' %}
+             style="color: var(--primary-black); background: var(--lemon-primary); border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid var(--lemon-primary); transition: all 0.3s ease;"
+             {% else %}
+             style="color: rgba(255, 255, 255, 0.9); background: transparent; border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid transparent; transition: all 0.3s ease;"
+             onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(255, 215, 0, 0.2)'; this.style.borderColor='var(--lemon-primary)'; }"
+             onmouseout="if(!this.classList.contains('active')) { this.style.background='transparent'; this.style.borderColor='transparent'; }"
+             {% endif %}>
+            <i class="bi bi-house me-2"></i>Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'image_detector' %}active{% endif %}" href="{{ url_for('image_detector') }}"
+             {% if request.endpoint == 'image_detector' %}
+             style="color: var(--primary-black); background: var(--lemon-primary); border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid var(--lemon-primary); transition: all 0.3s ease;"
+             {% else %}
+             style="color: rgba(255, 255, 255, 0.9); background: transparent; border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid transparent; transition: all 0.3s ease;"
+             onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(255, 215, 0, 0.2)'; this.style.borderColor='var(--lemon-primary)'; }"
+             onmouseout="if(!this.classList.contains('active')) { this.style.background='transparent'; this.style.borderColor='transparent'; }"
+             {% endif %}>
+            <i class="bi bi-image me-2"></i>Image Detection
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'video_detector' %}active{% endif %}" href="{{ url_for('video_detector') }}"
+             {% if request.endpoint == 'video_detector' %}
+             style="color: var(--primary-black); background: var(--lemon-primary); border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid var(--lemon-primary); transition: all 0.3s ease;"
+             {% else %}
+             style="color: rgba(255, 255, 255, 0.9); background: transparent; border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid transparent; transition: all 0.3s ease;"
+             onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(255, 215, 0, 0.2)'; this.style.borderColor='var(--lemon-primary)'; }"
+             onmouseout="if(!this.classList.contains('active')) { this.style.background='transparent'; this.style.borderColor='transparent'; }"
+             {% endif %}>
+            <i class="bi bi-camera-video me-2"></i>Video Detection
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="{{ url_for('reports') }}"
+             {% if request.endpoint == 'reports' %}
+             style="color: var(--primary-black); background: var(--lemon-primary); border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid var(--lemon-primary); transition: all 0.3s ease;"
+             {% else %}
+             style="color: rgba(255, 255, 255, 0.9); background: transparent; border-radius: 10px; margin-bottom: 0.5rem; font-weight: 600; border: 2px solid transparent; transition: all 0.3s ease;"
+             onmouseover="if(!this.classList.contains('active')) { this.style.background='rgba(255, 215, 0, 0.2)'; this.style.borderColor='var(--lemon-primary)'; }"
+             onmouseout="if(!this.classList.contains('active')) { this.style.background='transparent'; this.style.borderColor='transparent'; }"
+             {% endif %}>
+            <i class="bi bi-file-earmark-text me-2"></i>Reports
+          </a>
+        </li>
+      </ul>
+      
+      <!-- Sidebar Footer with Logo -->
+      <div class="sidebar-footer mt-auto">
+        <div class="text-center mb-3">
+          <img src="{{ url_for('static', filename='logo.png') }}" 
+               alt="DeepGuard AI Logo" 
+               style="max-width: 200px; height: auto;">
+        </div>
+        
+      </div>
+    </nav>
+
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-sidebar-toggle d-lg-none" type="button" onclick="toggleSidebar()">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Main Content Area -->
+    <div class="main-content flex-fill d-flex flex-column">
+      <!-- Main Content -->
+      <main class="flex-fill content-area">
+        {% block content %}{% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer mt-auto py-3">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-shield-shaded me-2"></i>
+                <span>DeepGuard AI - Advanced Detection Technology</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex justify-content-md-end justify-content-start mt-2 mt-md-0">
+                <small>
+                  &copy; 2025 All rights reserved
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+      // Sidebar toggle functionality
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
+        
+        sidebar.classList.toggle('show');
+        toggleBtn.classList.toggle('active');
+      }
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
+        
+        if (window.innerWidth < 992) {
+          if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
+            sidebar.classList.remove('show');
+            toggleBtn.classList.remove('active');
+          }
+        }
+      });
+
+      // Add loading states and smooth animations
+      document.addEventListener('DOMContentLoaded', function() {
+        // Add fade-in animation to main content
+        const main = document.querySelector('main');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(20px)';
+        main.style.transition = 'all 0.6s ease-out';
+        
+        setTimeout(() => {
+          main.style.opacity = '1';
+          main.style.transform = 'translateY(0)';
+        }, 100);
+
+        // Initialize intersection observer for scroll animations
+        const observerOptions = {
+          threshold: 0.1,
+          rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.style.animationPlayState = 'running';
+              entry.target.classList.add('animate');
+            }
+          });
+        }, observerOptions);
+
+        // Observe all elements with fade-in-up class
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+          observer.observe(el);
+        });
+
+        // Enhanced form submission with ripple effect
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+          form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+              // Create ripple effect
+              const ripple = document.createElement('span');
+              ripple.classList.add('ripple');
+              submitBtn.appendChild(ripple);
+              
+              submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Analyzing...';
+              submitBtn.disabled = true;
+              submitBtn.style.transform = 'scale(0.98)';
+              
+              setTimeout(() => {
+                submitBtn.style.transform = 'scale(1)';
+              }, 150);
+            }
+          });
+        });
+
+        // Enhanced card hover effects
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+          card.addEventListener('mouseenter', function(e) {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+            this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
+          });
+          
+          card.addEventListener('mouseleave', function(e) {
+            this.style.transform = 'translateY(0) scale(1)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+          });
+        });
+
+        // Animate counters when they come into view
+        const counters = document.querySelectorAll('.counter');
+        const counterObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && !entry.target.dataset.animated) {
+              const counter = entry.target;
+              const text = counter.textContent.trim();
+              counter.dataset.animated = 'true'; // Mark as animated to prevent re-animation
+              
+              if (text.includes('%')) {
+                const targetValue = parseFloat(text.replace('%', ''));
+                counter.textContent = '0%';
+                animateCounter(counter, 0, targetValue, '%');
+              } else if (text.includes('fps')) {
+                const targetValue = parseInt(text.replace('fps', ''));
+                counter.textContent = '0fps';
+                animateCounter(counter, 0, targetValue, 'fps');
+              } else if (text.includes('s')) {
+                counter.style.opacity = '0';
+                setTimeout(() => {
+                  counter.style.opacity = '1';
+                  counter.style.transform = 'scale(1.1)';
+                  setTimeout(() => {
+                    counter.style.transform = 'scale(1)';
+                  }, 200);
+                }, 300);
+              }
+            }
+          });
+        }, observerOptions);
+
+        counters.forEach(counter => {
+          counterObserver.observe(counter);
+        });
+
+        function animateCounter(element, start, end, suffix) {
+          const duration = 2000;
+          const range = end - start;
+          const stepTime = duration / Math.abs(range);
+          let current = start;
+          const startTime = Date.now();
+          
+          const timer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            if (suffix === '%') {
+              current = start + (end - start) * progress;
+              element.textContent = current.toFixed(1) + suffix;
+            } else {
+              current = Math.floor(start + (end - start) * progress);
+              element.textContent = current + suffix;
+            }
+            
+            element.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+              element.style.transform = 'scale(1)';
+            }, 100);
+            
+            if (progress >= 1) {
+              clearInterval(timer);
+              // Set final value to ensure accuracy
+              element.textContent = end + suffix;
+              element.style.color = '#3b82f6';
+              setTimeout(() => {
+                element.style.color = '';
+              }, 500);
+            }
+          }, 16); // ~60fps for smooth animation
+        }
+
+        // Add navbar scroll effect
+        let lastScrollTop = 0;
+        const navbar = document.querySelector('.navbar');
+        
+        window.addEventListener('scroll', function() {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          
+          if (scrollTop > lastScrollTop && scrollTop > 100) {
+            // Scrolling down
+            navbar.style.transform = 'translateY(-100%)';
+          } else {
+            // Scrolling up
+            navbar.style.transform = 'translateY(0)';
+          }
+          
+          // Add background blur when scrolled
+          if (scrollTop > 50) {
+            navbar.style.backdropFilter = 'blur(10px)';
+            navbar.style.backgroundColor = 'rgba(30, 58, 138, 0.95)';
+          } else {
+            navbar.style.backdropFilter = 'none';
+            navbar.style.backgroundColor = '#1e3a8a';
+          }
+          
+          lastScrollTop = scrollTop;
+        });
+
+        // Add smooth scroll to anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+              target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+
+        // Add loading placeholder for images
+        document.querySelectorAll('img').forEach(img => {
+          img.addEventListener('load', function() {
+            this.style.opacity = '0';
+            this.style.transform = 'scale(1.1)';
+            this.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+              this.style.opacity = '1';
+              this.style.transform = 'scale(1)';
+            }, 50);
+          });
+        });
+      });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
